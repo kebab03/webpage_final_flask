@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Toggle</title>
+  <style>
+    .toggle-btn {
+        width: 80px;
+        height: 40px;
+        border-radius: 30px;
+        padding: 5px;
+        transition: all 300ms ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        margin: 30px;
+        position: relative;
+        overflow: hidden;
+        background-color: gray;
+    }
+
+    .toggle-btn.active {
+        background-color: #21f3f5;
+        box-shadow: 0 0 10px #2196f3, 0 0 40px #2196f3, 0 0 80px #2196f3;
+        transition-delay: 0.5s;
+    }
+
+    .toggle-btn .inner-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        transition: all 300ms ease-in-out;
+        background: white;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: translateX(0%);
+    }
+
+    .toggle-btn.active .inner-circle {
+        transform: translateX(100%);
+    }
+
+    .toggle-btn .label {
+        color: #fe077a;
+        font-size: 24px;
+        position: relative;
+        top: 0px;
+        left: 5px;
+        right: 0;
+    }
+
+    .toggle-btn.active + h3 {
+        color: rgb(188, 13, 13);
+    }
+
+    .toggle-btn + h3 {
+        color: rgb(138, 208, 33);
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    var buttonStates = {{ button_states|tojson }};
+    var buttonLabels = {{ button_labels|tojson }};
+    window.alert(buttonLabels);
+    function toggleState(buttonId) {
+      window.alert("buttonStates::---="+buttonStates);
+      var buttonIndex = buttonId.replace('button', '');
+      var currentState = buttonStates[buttonIndex];
+      window.alert("buttonIndex:="+buttonIndex);
+
+      currentState = currentState === 'on' ? 'off' : 'on'; // toggle the state
+      buttonStates[buttonIndex] = currentState;
+      window.alert( " buttonLabels[buttonIndex]:-"+buttonLabels[buttonIndex]);
+      $.ajax({
+        url: "/state",
+        type: "POST",
+        
+        data: JSON.stringify({ "buttonId":buttonIndex, "state": currentState, "buttonLabel": buttonLabels[buttonIndex] }),
+        contentType: "application/json",
+        success: function(response) {
+          // handle successful response
+          console.log(response);
+
+          // Toggle active class and update data-state attribute
+          var button = $('#' + buttonId);
+          button.toggleClass('active');
+          button.attr('data-state', currentState);
+          
+          // Update the state text
+          var h3Element = $('#state' + buttonIndex);
+          h3Element.text(buttonLabels[buttonIndex] + " is currently " + (currentState === 'on' ? "ON" : "OFF"));
+        },
+        error: function(xhr, status, error) {
+          // handle error
+          console.log("Error: " + error);
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+  {% for i in range(num_buttons) %}
+    <button class="toggle-btn {% if button_states[i] == 'on'%}active{% endif %}" id="button{{ i }}" onclick="toggleState('button{{ i }}')" data-state="{{ button_states[i] }}">
+      <div class="inner-circle"></div>
+      <div class="label">{{ button_labels[i] }}</div>
+    </button>
+    <h3 id="state{{ i }}">
+      <script>
+        alert("button_states[{{ i }}]: " + "{{ button_states[i] }}");
+      </script>
+      {% if button_states[i] == 'on' %}
+        {{ button_labels[i] }} is currently ON = this line will toggle
+      {% else %}
+      <script>
+        alert("button_states[{{ i }}]  =?=off: " + "{{ button_states[i] }}");
+      </script>
+        {{ button_labels[i] }} is currently OFF -this line will change 
+      {% endif %}
+    </h3>
+  {% endfor %}
+</body>
+</html>

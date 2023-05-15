@@ -1,0 +1,30 @@
+function toggleSwitch(i, button_labels, button_states) {
+    const toggleBtns = document.getElementsByClassName("toggle-btn");
+    const h3Elements = document.querySelectorAll("h3");
+  
+    // Toggle the button state
+    if (button_states === "off") {
+      button_states = "on";
+      toggleBtns[i].classList.add("active");
+    } else {
+      button_states = "off";
+      toggleBtns[i].classList.remove("active");
+    }
+  
+    // Update the button label and state text
+    h3Elements[i].innerHTML = `${button_labels} is currently ${button_states.toUpperCase()}`;
+  
+    // Send the button state to the /state endpoint
+    fetch("/state", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ buttonId: i, buttonState: button_states })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // Handle the response from /state if needed
+      });
+  }
+  
